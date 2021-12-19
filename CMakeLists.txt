@@ -9,7 +9,7 @@ link_directories(${CMAKE_SOURCE_DIR}/lib)
 
 link_directories("C:/Code/Lib/x64") # Delete this if you don't have this. It just has .lib or .o files for the below libraries
 
-
+set (CMAKE_CXX_STANDARD 17)
 
 file(GLOB SRC_FILES
      "source/*.cc"

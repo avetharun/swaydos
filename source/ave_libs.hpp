@@ -41,7 +41,7 @@
 
 
 
-#ifdef ALIB_BINARY
+#ifndef ALIB_NO_BINARY
 // 
 //      Binary & bit manipulation utilities
 //    - Avetharun
@@ -140,7 +140,38 @@
 
 
 
-#endif // ALIB_BINARY
+#endif // NDEF(ALIB_NO_BINARY)
+
+
+#ifndef ALIB_NO_FS_UTILS
+#if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
+// If the OS supports POSIX functions, use this version of the file_exists function
+#include <sys/stat.h>
+// Fastest, but *NIX only.
+inline bool file_exists (const char* name) {
+    struct stat buffer;   
+    return (stat (name, &buffer) == 0); 
+}
+#else
+// Fallback to windows/crossplatform version
+#include <string>
+#include <fstream>
+// Almost slowest, but hey, it's cross platform.
+inline bool file_exists (const char* name) {
+    if (FILE *file = fopen(name, "r")) {
+        fclose(file);
+        return true;
+    } else {
+        return false;
+    }   
+}
+
+#endif
+
+
+
+#endif // NDEF(ALIB_NO_FS_UTILS)
+
 
 
 #endif // __lib_aveth_utils_hpp
