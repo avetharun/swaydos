@@ -1,3 +1,5 @@
+#ifndef swaydos_windowmgr_mainw_hpp
+#define swaydos_windowmgr_mainw_hpp
 #ifndef _WINDOWS_
 #include <Windows.h>
 #endif
@@ -16,6 +18,7 @@
 #include <Tlhelp32.h>
 #include <winbase.h>
 
+#include "ave_libs.hpp"
 
 /**
  * @brief A panel that can either be floating, as a window of sorts, or on the Taskbar.
@@ -35,6 +38,7 @@ struct Panel{
 
 // This is NOT the window struct for applications. This is the internal SDL window class.
 struct InternalWindow {
+    bool exiting = false;
     static InternalWindow* instance;
     static InternalWindow* GetInstance() {  return (instance == nullptr) ? new InternalWindow() : instance;     }
     
@@ -79,32 +83,6 @@ struct InternalWindow {
         return ( & InternalWindow::GetInstance()->procHandles );
     }
     /**
-     * @brief Get the HWNDs From ProcessID
-     * 
-     * @param dwProcessID 
-     * @param out : Returns vector of HWNDs associated with dwProcessID, or an empty vector if none is found.
-     */
-    static void GetWinFromPID(DWORD dwProcessID, std::vector<HWND>& out)
-    {
-        HWND hCurWnd = NULL;
-        do
-        {
-            hCurWnd = FindWindowEx(NULL, hCurWnd, NULL, NULL);
-            DWORD dwProcID = 0;
-            GetWindowThreadProcessId(hCurWnd, &dwProcID);
-            if (dwProcID == dwProcessID)
-            {
-                out.push_back(hCurWnd);
-            }
-        }
-        while (hCurWnd != NULL);
-
-        if (hCurWnd == NULL) {
-            out.clear(); // If this is called, it means all windows were null, or none were found.
-        }
-    }
-
-    /**
      * @brief Refreshes & returns all process HWNDs
      * 
      * @return std::vector<HWND> * 
@@ -120,7 +98,7 @@ struct InternalWindow {
                 // Request as many permissions as possible, to get as many HWNDs as possible.
                 HANDLE hProcess = OpenProcess( PROCESS_ALL_ACCESS, FALSE, entry.th32ProcessID );
                 std::vector<HWND> temp;
-                GetWinFromPID(GetProcessId(hProcess), temp);
+                getWinFromPID(GetProcessId(hProcess), temp);
                 if (temp.size() == 0) { // If the size is 0, it means no HWNDs are associated with this hProcess
                     continue; // Break out of this part of the loop
                 }
@@ -131,47 +109,6 @@ struct InternalWindow {
         return ( & InternalWindow::GetInstance()->procHWNDs );
     }
 
-    /**
-     * @brief Kills process by name, first instance
-     * 
-     * @param name : name of process (.exe name) 
-     * @return int 
-     */
-    static int killProcName(const char* name) {
-        PROCESSENTRY32 entry;
-        entry.dwFlags = sizeof( PROCESSENTRY32 );
-
-        HANDLE snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, NULL );
-
-        if ( Process32First( snapshot, &entry ) == TRUE ) {
-            while ( Process32Next( snapshot, &entry ) == TRUE ) {
-                if ( _stricmp( entry.szExeFile, name ) == 0 ) {
-                    HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, false, entry.th32ProcessID );
-
-                    TerminateProcess( hProcess, 0 );
-
-                    CloseHandle( hProcess );
-                    return 0;
-                    break;
-                }
-            }
-
-        }
-        return -1;
-    }
-    
-    /**
-     * @brief Forcibly kills process by handle
-     * 
-     * @param handle : handle to kill
-     * @return int   : return value
-     */
-    static int killProcHandle(HANDLE handle) {
-        TerminateProcess( handle, 1 );
-        CloseHandle( handle );
-
-        return -1;
-    }
-
     
 };
+#endif

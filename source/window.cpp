@@ -6,49 +6,52 @@
 
 #include "swayconfig.hpp"
 
-std::function<void ()> PanelRunner;
+std::function<void ()> swayMsgHandler;
 int InternalWindow::Runner() {
     SDL_Init( SDL_INIT_VIDEO );
     // See bottommost comment of this file.
     unsigned short runnerData = Binary16(00000000,00000000);
-    this->InternalPanelWindow =   SDL_CreateWindow("SDOS_PANEL",  0,0,  100,100,  SDL_WINDOW_BORDERLESS | -SDL_WINDOW_RESIZABLE);
-    this->InternalDesktopWindow = SDL_CreateWindow("SDOS_DESK",   0,0,  100,100,  SDL_WINDOW_BORDERLESS | -SDL_WINDOW_RESIZABLE);
+    this->InternalPanelWindow =   SDL_CreateWindow("SWAYDOS_PANEL",  0,0,  100,100,  SDL_WINDOW_BORDERLESS | -SDL_WINDOW_RESIZABLE);
+    this->InternalDesktopWindow = SDL_CreateWindow("SWAYDOS_DESK",   0,0,  100,100,  SDL_WINDOW_BORDERLESS | -SDL_WINDOW_RESIZABLE);
+    InternalWindow::GetInstance()->InitThreadProc(); // Initialize threads and functions associated with them
 
-    InternalWindow::GetInstance()->InitThreadProc(); // Initialize threads and functions associated
-
-    // Create thread for panel management
-    InternalWindow::GetInstance()->panelThread = new std::thread(PanelRunner);
-    InternalWindow::GetInstance()->panelThread->detach();
+    std::thread swayMessageHandler(swayMsgHandler);
     
     while (true) {}
 
     
     //std::thread desktopThread;  Will work on this later.
-    return 0; // If this gets returned, it's safe to assume the background process was exited normally.. but that also means all SDL windows will be closed
+    return 0; // If this gets returned, it's safe to assume the panels have started normally.
 }
 
 void InternalWindow::OnExit() {
+    InternalWindow::exiting = true;
     InternalWindow::GetInstance()->panelThread->join();
+    //InternalWindow::GetInstance()->desktopThread->join();
 
 }
 
 void InternalWindow::InitThreadProc() {
 
-    PanelRunner = std::function([&] () {
-        std::function<void()> RenderProcS = {
-            
-        };
-        while (true) {
-            
-            /** \todo */
-        }
-    });
+    InternalWindow::GetInstance()->panelThread = new std::thread(
+        std::function([&] () {
+
+            // i've no idea what im doing... help me
+
+            std::function<void()> RenderProcS = {
+                
+            };
+            while (true) {
+                /** \todo */
+            }
+        })
+    );
 }
 
 
 
 
-// Init externals
+// Init externals, because compiler complains.
 InternalWindow * InternalWindow::instance = nullptr;
 std::thread * InternalWindow::bgThread = nullptr;
 std::thread * InternalWindow::panelThread = nullptr;

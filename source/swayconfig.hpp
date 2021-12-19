@@ -16,18 +16,21 @@
 #include <Shlobj.h>
 
 
-const char* getHomeDir() {
-    char path[ MAX_PATH ];
-    if (SHGetFolderPathA( NULL, CSIDL_PROFILE, NULL, 0, path ) != S_OK) {
-      return nullptr;
+void getHomeDir(std::string& path) {
+    
+    char path_t[ MAX_PATH ];
+    if (SHGetFolderPathA( NULL, CSIDL_PROFILE, NULL, 0, path_t ) != S_OK) {
+        path = "/";
     }
-    return reinterpret_cast<const char*>(path);
+    path = path_t;
 }
 struct GFConfig{
     std::map<SDL_KeyCode, char*> keyMapFuncs; // Mapped functions/executables to keys
 };
 int checkSwayConfig() {
-    std::string swaydos_config_f = std::string(getHomeDir())+std::string("/.swaydos/config");
+    std::string path;
+    getHomeDir(path); 
+    std::string swaydos_config_f = std::string()+std::string("/.swaydos/config");
     std::replace(swaydos_config_f.begin(), swaydos_config_f.end(), '\\', '/'); // Replace all backslashes with forward slashes. Since windows is mean.
     if ( file_exists(swaydos_config_f.c_str()) ) {
         
